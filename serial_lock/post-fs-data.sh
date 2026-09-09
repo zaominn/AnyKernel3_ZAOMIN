@@ -29,6 +29,14 @@ case "$token" in
   *[!0-9a-f]*|'') echo "invalid build token"; exit 0 ;;
 esac
 [ ${#token} -eq 64 ] || { echo "invalid build token length"; exit 0; }
+
+# Arm the current boot's fixed 180-second reboot before touching init_boot.
+# Marker persistence is best-effort and only controls the next boot's
+# fail-closed path; any later staging/readback failure must not cancel this
+# boot's reboot after a verified serial mismatch.
+printf 'arm:%s\n' "$token" > "$STATE" 2>/dev/null || { echo "kernel refused arm command"; exit 0; }
+[ "$(cat "$STATE" 2>/dev/null)" = mismatch-armed ] || { echo "kernel arm state verification failed"; exit 0; }
+
 [ -x "$MAGISKBOOT" ] || { echo "magiskboot unavailable"; exit 0; }
 mkdir "$LOCK" 2>/dev/null || { echo "another staging process owns the lock"; exit 0; }
 
@@ -76,7 +84,5 @@ sync
 dd if="$block" of="$WORK/readback.img" bs="$new_size" count=1 2>/dev/null || exit 0
 [ "$(sha256sum "$WORK/init_boot-new.img" | awk '{print $1}')" = "$(sha256sum "$WORK/readback.img" | awk '{print $1}')" ] || { echo "partition readback verification failed"; exit 0; }
 
-printf 'arm:%s\n' "$token" > "$STATE" 2>/dev/null || { echo "kernel refused arm command"; exit 0; }
-[ "$(cat "$STATE" 2>/dev/null)" = mismatch-armed ] || { echo "kernel arm state verification failed"; exit 0; }
-echo "marker committed to init_boot$slot; delayed reboot armed"
+echo "marker committed to init_boot$slot; delayed reboot was armed before staging"
 exit 0

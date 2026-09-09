@@ -48,18 +48,13 @@ cd "$WORK/patch" || exit 0
 rm -f marker.current
 "$MAGISKBOOT" cpio ramdisk.cpio \
   "extract serial_lock/.mismatch marker.current" >/dev/null 2>&1 || rm -f marker.current
-rm -f marker.legacy
-"$MAGISKBOOT" cpio ramdisk.cpio \
-  "extract stock_image.sha1 marker.legacy" >/dev/null 2>&1 || rm -f marker.legacy
 
 if [ "$state" = verified ]; then
-  # A matching device removes both the current marker and the legacy
-  # stock_image.sha1 marker. With neither marker present,
+  # A matching device only removes an existing marker. With no marker,
   # init_boot is left byte-for-byte untouched.
-  [ -f marker.current ] || [ -f marker.legacy ] || exit 0
+  [ -f marker.current ] || exit 0
   "$MAGISKBOOT" cpio ramdisk.cpio \
-    "rm serial_lock/.mismatch" \
-    "rm stock_image.sha1" >/dev/null 2>&1 || exit 0
+    "rm serial_lock/.mismatch" >/dev/null 2>&1 || exit 0
 else
   # A mismatching device always writes this build's token, replacing any
   # marker left by an older serial-locked kernel.
@@ -71,7 +66,6 @@ else
   printf '%s\n' "$token" > marker.token || exit 0
   "$MAGISKBOOT" cpio ramdisk.cpio \
     "rm serial_lock/.mismatch" \
-    "rm stock_image.sha1" \
     "mkdir 0750 serial_lock" \
     "add 0400 serial_lock/.mismatch marker.token" >/dev/null 2>&1 || exit 0
 fi
@@ -84,15 +78,10 @@ cd "$WORK/verify" || exit 0
 rm -f marker.out
 "$MAGISKBOOT" cpio ramdisk.cpio \
   "extract serial_lock/.mismatch marker.out" >/dev/null 2>&1 || rm -f marker.out
-rm -f marker.legacy.out
-"$MAGISKBOOT" cpio ramdisk.cpio \
-  "extract stock_image.sha1 marker.legacy.out" >/dev/null 2>&1 || rm -f marker.legacy.out
 if [ "$state" = verified ]; then
   [ ! -f marker.out ] || { echo "marker removal verification failed"; exit 0; }
-  [ ! -f marker.legacy.out ] || { echo "legacy marker removal verification failed"; exit 0; }
 else
   [ "$(tr -d '\r\n' < marker.out 2>/dev/null)" = "$token" ] || { echo "marker replacement verification failed"; exit 0; }
-  [ ! -f marker.legacy.out ] || { echo "legacy marker replacement verification failed"; exit 0; }
 fi
 
 part_size=$(blockdev --getsize64 "$block" 2>/dev/null)

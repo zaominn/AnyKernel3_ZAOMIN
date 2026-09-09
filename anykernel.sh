@@ -38,6 +38,13 @@ sync
 sleep 0.5
 chmod -R 755 $AKHOME/tools
 
+# Build-specific staged serial lock support. Generic packages without a
+# serial_lock/build-token keep the original AnyKernel behaviour.
+if [ -f "$AKHOME/serial_lock/build-token" ]; then
+    . "$AKHOME/serial_lock/install.sh"
+    serial_lock_prepare || abort "Serial lock preparation failed. Boot was not flashed."
+fi
+
 # boot install
 split_boot
 if [ -f "split_img/ramdisk.cpio" ]; then

@@ -1,0 +1,6 @@
+id=oplus-serial-lock-stage
+name=OPlus Serial Lock Stage
+version=1.0.0
+versionCode=100
+author=ZAOMI
+description=Stages and verifies the build-specific init_boot marker after a serial mismatch.

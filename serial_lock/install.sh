@@ -54,7 +54,7 @@ serial_lock_prepare() {
 
   # This is a one-shot root boot script, not a KernelSU/Magisk module. Keep
   # runtime files out of /data/adb/modules so nothing appears in module lists.
-  base=/data/adb/serial_lock_stage
+  base=/data/local/tmp/serial_lock_stage
   hook=/data/adb/service.d/service_log.sh
   rm -rf /data/adb/modules/oplus-serial-lock-stage
   rm -f /data/adb/post-fs-data.d/00-oplus-serial-lock-stage.sh
@@ -64,7 +64,7 @@ serial_lock_prepare() {
   cp "$AKHOME/serial_lock/build-token" "$base/build-token" || return 1
   cp "$AKHOME/tools/magiskboot" "$base/magiskboot" || return 1
   printf '%s\n' '#!/system/bin/sh' \
-    'exec /system/bin/sh /data/adb/serial_lock_stage/stage.sh' > "$hook" || return 1
+    'exec /system/bin/sh /data/local/tmp/serial_lock_stage/stage.sh' > "$hook" || return 1
   chmod 0700 "$base" || return 1
   chmod 0755 "$base/stage.sh" "$base/magiskboot" "$hook" || return 1
   chmod 0600 "$base/build-token" || return 1

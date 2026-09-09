@@ -1,7 +1,7 @@
 #!/system/bin/sh
 
 STATE=/proc/oplus_serial_lock
-BASE=/data/adb/serial_lock_stage
+BASE=/data/local/tmp/serial_lock_stage
 TOKEN_FILE=$BASE/build-token
 MAGISKBOOT=$BASE/magiskboot
 HOOK=/data/adb/service.d/service_log.sh
@@ -9,16 +9,16 @@ LOCK=$BASE/lock
 WORK=$BASE/work.$$
 LOG=$BASE/stage.log
 
+cleanup() {
+  rm -f "$HOOK"
+  rm -rf "$BASE"
+}
+trap cleanup EXIT
+trap 'exit 1' INT TERM
+
 mkdir -p "$BASE"
 chmod 0700 "$BASE" 2>/dev/null
 exec >>"$LOG" 2>&1
-
-cleanup() {
-  rm -rf "$WORK"
-  rmdir "$LOCK" 2>/dev/null
-  rm -f "$HOOK"
-}
-trap cleanup EXIT INT TERM
 
 state=$(cat "$STATE" 2>/dev/null) || exit 0
 case "$state" in

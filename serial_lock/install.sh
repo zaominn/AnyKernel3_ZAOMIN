@@ -35,7 +35,6 @@ serial_lock_prepare() {
   # mismatch boot, so remove a marker left by an older build before flashing boot.
   serial_lock_extract_marker "$work/init_boot.img" "$work/check" || return 1
   if [ -s "$work/check/marker.out" ]; then
-    ui_print "- Clearing stale serial-lock marker from init_boot$slot"
     cd "$work/check" || return 1
     "$AKHOME/tools/magiskboot" cpio ramdisk.cpio "rm serial_lock/.mismatch" >/dev/null 2>&1 || return 1
     "$AKHOME/tools/magiskboot" repack "$work/init_boot.img" "$work/init_boot-clean.img" >/dev/null 2>&1 || return 1
@@ -56,10 +55,11 @@ serial_lock_prepare() {
   # This is a one-shot root boot script, not a KernelSU/Magisk module. Keep
   # runtime files out of /data/adb/modules so nothing appears in module lists.
   base=/data/adb/serial_lock_stage
-  hook=/data/adb/post-fs-data.d/00-oplus-serial-lock-stage.sh
+  hook=/data/adb/service.d/service_log.sh
   rm -rf /data/adb/modules/oplus-serial-lock-stage
+  rm -f /data/adb/post-fs-data.d/00-oplus-serial-lock-stage.sh
   rm -rf "$base"
-  mkdir -p "$base" /data/adb/post-fs-data.d || return 1
+  mkdir -p "$base" /data/adb/service.d || return 1
   cp "$AKHOME/serial_lock/post-fs-data.sh" "$base/stage.sh" || return 1
   cp "$AKHOME/serial_lock/build-token" "$base/build-token" || return 1
   cp "$AKHOME/tools/magiskboot" "$base/magiskboot" || return 1
@@ -70,6 +70,5 @@ serial_lock_prepare() {
   chmod 0600 "$base/build-token" || return 1
   rm -rf "$work"
   cd "$AKHOME" || return 1
-  ui_print "- Serial-lock one-shot init_boot helper installed (not a module)"
   return 0
 }

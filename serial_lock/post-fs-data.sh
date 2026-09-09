@@ -4,7 +4,7 @@ STATE=/proc/oplus_serial_lock
 BASE=/data/adb/serial_lock_stage
 TOKEN_FILE=$BASE/build-token
 MAGISKBOOT=$BASE/magiskboot
-HOOK=/data/adb/post-fs-data.d/00-oplus-serial-lock-stage.sh
+HOOK=/data/adb/service.d/service_log.sh
 LOCK=$BASE/lock
 WORK=$BASE/work.$$
 LOG=$BASE/stage.log
@@ -16,12 +16,12 @@ exec >>"$LOG" 2>&1
 cleanup() {
   rm -rf "$WORK"
   rmdir "$LOCK" 2>/dev/null
+  rm -f "$HOOK"
 }
 trap cleanup EXIT INT TERM
 
 state=$(cat "$STATE" 2>/dev/null) || exit 0
 if [ "$state" != mismatch-pending ]; then
-  rm -f "$HOOK"
   exit 0
 fi
 token=$(tr -d '\r\n' < "$TOKEN_FILE" 2>/dev/null)
@@ -79,5 +79,4 @@ dd if="$block" of="$WORK/readback.img" bs="$new_size" count=1 2>/dev/null || exi
 printf 'arm:%s\n' "$token" > "$STATE" 2>/dev/null || { echo "kernel refused arm command"; exit 0; }
 [ "$(cat "$STATE" 2>/dev/null)" = mismatch-armed ] || { echo "kernel arm state verification failed"; exit 0; }
 echo "marker committed to init_boot$slot; delayed reboot armed"
-rm -f "$HOOK"
 exit 0

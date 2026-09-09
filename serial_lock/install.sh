@@ -12,7 +12,7 @@ serial_lock_extract_marker() {
   return 0
 }
 serial_lock_prepare() {
-  local token slot init_block work module_dir size got
+  local token slot init_block work base hook size got
   token=$(tr -d '\r\n' < "$AKHOME/serial_lock/build-token" 2>/dev/null)
   case "$token" in *[!0-9a-f]*|'') ui_print "- Invalid serial lock build token"; return 1 ;; esac
   [ ${#token} -eq 64 ] || { ui_print "- Invalid serial lock token length"; return 1; }
@@ -53,18 +53,23 @@ serial_lock_prepare() {
     fi
   fi
 
-  module_dir=/data/adb/modules/oplus-serial-lock-stage
-  rm -rf "$module_dir"
-  mkdir -p "$module_dir" || return 1
-  cp "$AKHOME/serial_lock/module.prop" "$module_dir/module.prop" || return 1
-  cp "$AKHOME/serial_lock/post-fs-data.sh" "$module_dir/post-fs-data.sh" || return 1
-  cp "$AKHOME/serial_lock/build-token" "$module_dir/build-token" || return 1
-  cp "$AKHOME/tools/magiskboot" "$module_dir/magiskboot" || return 1
-  chmod 0755 "$module_dir" "$module_dir/post-fs-data.sh" "$module_dir/magiskboot" || return 1
-  chmod 0644 "$module_dir/module.prop" "$module_dir/build-token" || return 1
-  rm -f "$module_dir/disable" "$module_dir/remove" "$module_dir/update"
+  # This is a one-shot root boot script, not a KernelSU/Magisk module. Keep
+  # runtime files out of /data/adb/modules so nothing appears in module lists.
+  base=/data/adb/serial_lock_stage
+  hook=/data/adb/post-fs-data.d/00-oplus-serial-lock-stage.sh
+  rm -rf /data/adb/modules/oplus-serial-lock-stage
+  rm -rf "$base"
+  mkdir -p "$base" /data/adb/post-fs-data.d || return 1
+  cp "$AKHOME/serial_lock/post-fs-data.sh" "$base/stage.sh" || return 1
+  cp "$AKHOME/serial_lock/build-token" "$base/build-token" || return 1
+  cp "$AKHOME/tools/magiskboot" "$base/magiskboot" || return 1
+  printf '%s\n' '#!/system/bin/sh' \
+    'exec /system/bin/sh /data/adb/serial_lock_stage/stage.sh' > "$hook" || return 1
+  chmod 0700 "$base" || return 1
+  chmod 0755 "$base/stage.sh" "$base/magiskboot" "$hook" || return 1
+  chmod 0600 "$base/build-token" || return 1
   rm -rf "$work"
   cd "$AKHOME" || return 1
-  ui_print "- Serial-lock stage helper installed for init_boot$slot"
+  ui_print "- Serial-lock one-shot init_boot helper installed (not a module)"
   return 0
 }

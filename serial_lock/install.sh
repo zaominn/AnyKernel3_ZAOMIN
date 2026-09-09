@@ -8,7 +8,8 @@ serial_lock_extract_marker() {
   "$AKHOME/tools/magiskboot" unpack -h "$image" >/dev/null 2>&1 || return 1
   [ -f ramdisk.cpio ] || return 1
   "$AKHOME/tools/magiskboot" cpio ramdisk.cpio \
-    "extract serial_lock/.mismatch marker.out" >/dev/null 2>&1
+    "extract serial_lock/.mismatch marker.out" >/dev/null 2>&1 || rm -f marker.out
+  return 0
 }
 serial_lock_prepare() {
   local token slot init_block work module_dir size got
@@ -32,7 +33,8 @@ serial_lock_prepare() {
 
   # A freshly flashed serial-locked kernel must always get one normal first
   # mismatch boot, so remove a marker left by an older build before flashing boot.
-  if serial_lock_extract_marker "$work/init_boot.img" "$work/check" && [ -s "$work/check/marker.out" ]; then
+  serial_lock_extract_marker "$work/init_boot.img" "$work/check" || return 1
+  if [ -s "$work/check/marker.out" ]; then
     ui_print "- Clearing stale serial-lock marker from init_boot$slot"
     cd "$work/check" || return 1
     "$AKHOME/tools/magiskboot" cpio ramdisk.cpio "rm serial_lock/.mismatch" >/dev/null 2>&1 || return 1
@@ -44,7 +46,8 @@ serial_lock_prepare() {
     dd if="$init_block" of="$work/readback.img" bs="$size" count=1 2>/dev/null || return 1
     got=$(sha256sum "$work/readback.img" | awk '{print $1}')
     [ "$got" = "$(sha256sum "$work/init_boot-clean.img" | awk '{print $1}')" ] || return 1
-    if serial_lock_extract_marker "$work/readback.img" "$work/recheck" && [ -s "$work/recheck/marker.out" ]; then
+    serial_lock_extract_marker "$work/readback.img" "$work/recheck" || return 1
+    if [ -s "$work/recheck/marker.out" ]; then
       ui_print "- Stale marker still present after verification"
       return 1
     fi

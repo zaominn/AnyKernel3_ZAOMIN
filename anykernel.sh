@@ -45,8 +45,11 @@ clear_legacy_ksud_attrs() {
         [ -e "$target" ] || continue
         real=$("$bb" readlink -f "$target" 2>/dev/null)
         [ -n "$real" ] || real="$target"
-        "$bb" chattr -ia "$real" 2>/dev/null
+        "$bb" chattr -ia "$real" 2>/dev/null \
+            || abort "Unable to clear legacy ksud inode flags; boot was not flashed."
         attrs=$("$bb" lsattr -d "$real" 2>/dev/null | "$bb" awk '{print $1}')
+        [ -n "$attrs" ] \
+            || abort "Unable to verify legacy ksud inode flags; boot was not flashed."
         case "$attrs" in
             *i*|*a*) abort "Unable to clear legacy ksud inode flags; boot was not flashed." ;;
         esac

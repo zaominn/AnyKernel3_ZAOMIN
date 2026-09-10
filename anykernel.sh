@@ -33,9 +33,26 @@ NO_MAGISK_CHECK=1
 
 ui_print "内核构建者: ZAOMIN"
 
-# Recover from NoMount Suite <= 1.6.8 leaving the ReSukiSU daemon immutable.
-# The stale flag survives kernel flashes and otherwise blocks userspace migration.
-[ -f /data/adb/ksud ] && chattr -i /data/adb/ksud 2>/dev/null
+# Recover inode flags left by older NoMount builds before KernelSU gets a chance
+# to replace its userspace daemon.  Do not rely on a recovery-provided chattr:
+# AnyKernel already ships a known busybox, so use that implementation directly
+# and verify that both immutable and append-only flags are really gone.
+clear_legacy_ksud_attrs() {
+    local bb target attrs real
+    bb="$AKHOME/tools/busybox"
+    chmod 0755 "$bb" 2>/dev/null
+    for target in /data/adb/ksud /data/adb/ksu/bin/ksu_susfs; do
+        [ -e "$target" ] || continue
+        real=$("$bb" readlink -f "$target" 2>/dev/null)
+        [ -n "$real" ] || real="$target"
+        "$bb" chattr -ia "$real" 2>/dev/null
+        attrs=$("$bb" lsattr -d "$real" 2>/dev/null | "$bb" awk '{print $1}')
+        case "$attrs" in
+            *i*|*a*) abort "Unable to clear legacy ksud inode flags; boot was not flashed." ;;
+        esac
+    done
+}
+clear_legacy_ksud_attrs
 
 # Resolving occasional file system I/O latency issues which may cause binary execution exceptions
 sync

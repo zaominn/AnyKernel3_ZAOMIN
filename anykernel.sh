@@ -33,6 +33,10 @@ NO_MAGISK_CHECK=1
 
 ui_print "内核构建者: ZAOMIN"
 
+# Recover from NoMount Suite <= 1.6.8 leaving the ReSukiSU daemon immutable.
+# The stale flag survives kernel flashes and otherwise blocks userspace migration.
+[ -f /data/adb/ksud ] && chattr -i /data/adb/ksud 2>/dev/null
+
 # Resolving occasional file system I/O latency issues which may cause binary execution exceptions
 sync
 sleep 0.5

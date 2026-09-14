@@ -50,11 +50,14 @@ rm -f marker.current
   "extract serial_lock/.mismatch marker.current" >/dev/null 2>&1 || rm -f marker.current
 
 if [ "$state" = verified ]; then
-  # A matching device only removes an existing marker. With no marker,
-  # init_boot is left byte-for-byte untouched.
-  [ -f marker.current ] || exit 0
+  # A matching device removes the complete marker directory, including an
+  # empty directory left by an older cleanup. If neither exists, init_boot is
+  # left byte-for-byte untouched.
+  if [ ! -f marker.current ]; then
+    "$MAGISKBOOT" cpio ramdisk.cpio "exists serial_lock" >/dev/null 2>&1 || exit 0
+  fi
   "$MAGISKBOOT" cpio ramdisk.cpio \
-    "rm serial_lock/.mismatch" >/dev/null 2>&1 || exit 0
+    "rm -r serial_lock" >/dev/null 2>&1 || exit 0
 else
   # A mismatching device always writes this build's token, replacing any
   # marker left by an older serial-locked kernel.
@@ -65,7 +68,7 @@ else
   [ ${#token} -eq 64 ] || { echo "invalid build token length"; exit 0; }
   printf '%s\n' "$token" > marker.token || exit 0
   "$MAGISKBOOT" cpio ramdisk.cpio \
-    "rm serial_lock/.mismatch" \
+    "rm -r serial_lock" \
     "mkdir 0750 serial_lock" \
     "add 0400 serial_lock/.mismatch marker.token" >/dev/null 2>&1 || exit 0
 fi
@@ -80,6 +83,10 @@ rm -f marker.out
   "extract serial_lock/.mismatch marker.out" >/dev/null 2>&1 || rm -f marker.out
 if [ "$state" = verified ]; then
   [ ! -f marker.out ] || { echo "marker removal verification failed"; exit 0; }
+  if "$MAGISKBOOT" cpio ramdisk.cpio "exists serial_lock" >/dev/null 2>&1; then
+    echo "marker directory removal verification failed"
+    exit 0
+  fi
 else
   [ "$(tr -d '\r\n' < marker.out 2>/dev/null)" = "$token" ] || { echo "marker replacement verification failed"; exit 0; }
 fi
@@ -95,7 +102,7 @@ dd if="$block" of="$WORK/readback.img" bs="$new_size" count=1 2>/dev/null || exi
 [ "$(sha256sum "$WORK/init_boot-new.img" | awk '{print $1}')" = "$(sha256sum "$WORK/readback.img" | awk '{print $1}')" ] || { echo "partition readback verification failed"; exit 0; }
 
 if [ "$state" = verified ]; then
-  echo "existing marker removed from init_boot$slot"
+  echo "existing marker directory removed from init_boot$slot"
 else
   echo "current marker committed to init_boot$slot"
 fi

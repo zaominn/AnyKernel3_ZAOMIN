@@ -1,9 +1,9 @@
 #!/sbin/sh
 
-# ZAOMINN product layer. The generic partition/ramdisk engine remains in
+# Installer profile. The generic partition/ramdisk engine remains in
 # ak3-core.sh so upstream attribution and updateability stay intact.
 
-zaominn_clear_legacy_ksud_attrs() {
+installer_clear_legacy_ksud_attrs() {
     local bb target attrs real
     bb="$AKHOME/tools/busybox"
     chmod 0755 "$bb" 2>/dev/null
@@ -22,12 +22,11 @@ zaominn_clear_legacy_ksud_attrs() {
     done
 }
 
-zaominn_prepare_flash() {
+installer_prepare_flash() {
     ui_print " "
-    ui_print "ZAOMIN Kernel Installer"
-    ui_print "内核构建者: $ZAOMINN_BUILDER"
+    ui_print "AnyKernel3 Kernel Installer"
     ui_print " "
-    zaominn_clear_legacy_ksud_attrs
+    installer_clear_legacy_ksud_attrs
     sync
     sleep 0.5
     chmod -R 0755 "$AKHOME/tools"
@@ -38,7 +37,7 @@ zaominn_prepare_flash() {
     fi
 }
 
-zaominn_install_module() {
+installer_install_module() {
     local archive label
     archive=$1
     label=$2
@@ -56,10 +55,10 @@ zaominn_install_module() {
     ui_print "$label module installation complete."
 }
 
-zaominn_install_bundled_modules() {
-    zaominn_install_module zram.zip ZRAM
-    zaominn_install_module kpn.zip KP-N
-    if [ "${ZAOMINN_INSTALL_REKERNEL:-0}" = 1 ]; then
-        zaominn_install_module rekernel.zip Re-Kernel
+installer_install_bundled_modules() {
+    installer_install_module zram.zip ZRAM
+    installer_install_module kpn.zip KP-N
+    if [ "${INSTALLER_INSTALL_REKERNEL:-0}" = 1 ]; then
+        installer_install_module rekernel.zip Re-Kernel
     fi
 }

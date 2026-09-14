@@ -1,12 +1,12 @@
-# ZAOMIN Kernel Installer
+# AnyKernel3 Kernel Installer
 
-ZAOMIN's private-profile flash package separates device/product behavior from
+This self-use flash package separates device/product behavior from
 the upstream AnyKernel3 engine:
 
-- `anykernel.sh` declares the boot-image operation and ZAOMIN profile.
-- `tools/zaominn-profile.sh` owns serial-lock preparation, safety checks and
+- `anykernel.sh` declares the boot-image operation and installer profile.
+- `tools/installer-profile.sh` owns serial-lock preparation, safety checks and
   optional module installation.
 - `tools/ak3-core.sh` remains the licensed AnyKernel3 engine by osm0sis.
 
 The split preserves the existing self-use configuration and installer output;
-it does not add the ZAOMI-only Re-Kernel bundle behavior.
+it does not enable the optional Re-Kernel bundle behavior.

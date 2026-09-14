@@ -4,7 +4,7 @@
 ### AnyKernel setup
 # global properties
 properties() { '
-kernel.string=ZAOMIN Kernel Installer (AnyKernel3) | Build by ZAOMIN
+kernel.string=AnyKernel3 Kernel Installer
 do.devicecheck=0
 do.modules=0
 do.systemless=0
@@ -28,12 +28,11 @@ RAMDISK_COMPRESSION=auto
 PATCH_VBMETA_FLAG=auto
 NO_MAGISK_CHECK=1
 
-# Import the licensed AnyKernel3 engine, then the ZAOMIN product layer.
+# Import the licensed AnyKernel3 engine, then the installer profile.
 . tools/ak3-core.sh
-ZAOMINN_BUILDER=ZAOMIN
-ZAOMINN_INSTALL_REKERNEL=0
-. tools/zaominn-profile.sh
-zaominn_prepare_flash
+INSTALLER_INSTALL_REKERNEL=0
+. tools/installer-profile.sh
+installer_prepare_flash
 
 # boot install
 split_boot
@@ -44,4 +43,4 @@ else
     flash_boot
 fi
 ## end boot install
-zaominn_install_bundled_modules
+installer_install_bundled_modules

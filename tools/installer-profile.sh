@@ -25,6 +25,7 @@ installer_clear_legacy_ksud_attrs() {
 installer_prepare_flash() {
     ui_print " "
     ui_print "AnyKernel3 Kernel Installer"
+    ui_print "内核构建者: ${INSTALLER_BUILDER:-ZAOMI}"
     ui_print " "
     installer_clear_legacy_ksud_attrs
     sync

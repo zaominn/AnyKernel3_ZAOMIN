@@ -33,10 +33,6 @@ NO_MAGISK_CHECK=1
 
 ui_print "内核构建者: ZAOMIN"
 
-# Recover inode flags left by older NoMount builds before KernelSU gets a chance
-# to replace its userspace daemon.  Do not rely on a recovery-provided chattr:
-# AnyKernel already ships a known busybox, so use that implementation directly
-# and verify that both immutable and append-only flags are really gone.
 clear_legacy_ksud_attrs() {
     local bb target attrs real
     bb="$AKHOME/tools/busybox"

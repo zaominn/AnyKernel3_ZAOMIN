@@ -8,5 +8,5 @@ the upstream AnyKernel3 engine:
   optional module installation.
 - `tools/ak3-core.sh` remains the licensed AnyKernel3 engine by osm0sis.
 
-The split preserves the existing self-use configuration and installer output;
-it does not enable the optional Re-Kernel bundle behavior.
+The split preserves the existing self-use configuration and installer output,
+including installation of a bundled Re-Kernel module when present.

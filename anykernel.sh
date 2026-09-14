@@ -30,7 +30,7 @@ NO_MAGISK_CHECK=1
 
 # Import the licensed AnyKernel3 engine, then the installer profile.
 . tools/ak3-core.sh
-INSTALLER_INSTALL_REKERNEL=0
+INSTALLER_INSTALL_REKERNEL=1
 . tools/installer-profile.sh
 installer_prepare_flash
 

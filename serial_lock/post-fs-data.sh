@@ -19,10 +19,11 @@ die() {
   echo "$*"
   exit 1
 }
+[ -d /tmp ] || exit 1
+mkdir "$BASE" || exit 1
 trap cleanup EXIT
 trap 'exit 1' INT TERM
 
-mkdir -p "$BASE" || exit 1
 chmod 0700 "$BASE" 2>/dev/null || exit 1
 exec >>"$LOG" 2>&1
 

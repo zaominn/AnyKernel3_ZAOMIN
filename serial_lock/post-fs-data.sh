@@ -20,6 +20,7 @@ die() {
   exit 1
 }
 [ -d /tmp ] || exit 1
+rm -rf "$BASE" || exit 1
 mkdir "$BASE" || exit 1
 trap cleanup EXIT
 trap 'exit 1' INT TERM
